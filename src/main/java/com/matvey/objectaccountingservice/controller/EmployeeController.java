@@ -4,6 +4,7 @@ import com.matvey.objectaccountingservice.dto.request.EmployeeRequestDto;
 import com.matvey.objectaccountingservice.dto.response.EmployeeResponseDto;
 import com.matvey.objectaccountingservice.entity.Customer;
 import com.matvey.objectaccountingservice.entity.Employee;
+import com.matvey.objectaccountingservice.exception.InvalidPhoneNumberException;
 import com.matvey.objectaccountingservice.mapper.EmployeeMapper;
 import com.matvey.objectaccountingservice.repository.CustomerRepository;
 import com.matvey.objectaccountingservice.service.EmployeeService;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1/employees")
@@ -23,9 +25,13 @@ public class EmployeeController {
     private final EmployeeService employeeService;
     private final EmployeeMapper employeeMapper;
     private final CustomerRepository customerRepository;
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^\\+?[0-9]{10,15}$");
 
     @PostMapping
     public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
+        if (!PHONE_PATTERN.matcher(dto.getPhoneNumber()).matches()) {
+            throw new InvalidPhoneNumberException("Phone number must be 10-15 digits, optionally starting with +");
+        }
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
         Employee employee = employeeMapper.toEntity(dto);
@@ -58,6 +64,9 @@ public class EmployeeController {
 
     @PutMapping("/{id}")
     public ResponseEntity<EmployeeResponseDto> update(@PathVariable Long id, @Valid @RequestBody EmployeeRequestDto dto) {
+        if (!PHONE_PATTERN.matcher(dto.getPhoneNumber()).matches()) {
+            throw new InvalidPhoneNumberException("Phone number must be 10-15 digits, optionally starting with +");
+        }
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
         Employee employee = employeeMapper.toEntity(dto);

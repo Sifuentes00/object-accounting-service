@@ -4,6 +4,7 @@ import com.matvey.objectaccountingservice.dto.request.ContractRequestDto;
 import com.matvey.objectaccountingservice.dto.response.ContractResponseDto;
 import com.matvey.objectaccountingservice.entity.Contract;
 import com.matvey.objectaccountingservice.entity.Object;
+import com.matvey.objectaccountingservice.exception.InvalidDateException;
 import com.matvey.objectaccountingservice.mapper.ContractMapper;
 import com.matvey.objectaccountingservice.repository.ObjectRepository;
 import com.matvey.objectaccountingservice.service.ContractService;
@@ -26,6 +27,9 @@ public class ContractController {
 
     @PostMapping
     public ResponseEntity<ContractResponseDto> create(@Valid @RequestBody ContractRequestDto dto) {
+        if (dto.getEndDate().isBefore(dto.getConclusionDate())) {
+            throw new InvalidDateException("End date cannot be before conclusion date");
+        }
         Object object = objectRepository.findById(dto.getObjectId())
                 .orElseThrow(() -> new RuntimeException("Object not found"));
         Contract contract = contractMapper.toEntity(dto);
@@ -64,6 +68,9 @@ public class ContractController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ContractResponseDto> update(@PathVariable Long id, @Valid @RequestBody ContractRequestDto dto) {
+        if (dto.getEndDate().isBefore(dto.getConclusionDate())) {
+            throw new InvalidDateException("End date cannot be before conclusion date");
+        }
         Object object = objectRepository.findById(dto.getObjectId())
                 .orElseThrow(() -> new RuntimeException("Object not found"));
         Contract contract = contractMapper.toEntity(dto);
