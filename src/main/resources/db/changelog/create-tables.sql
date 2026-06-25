@@ -9,6 +9,18 @@ CREATE TABLE customer (
     version BIGINT NOT NULL DEFAULT 0
 );
 
+CREATE TABLE employee (
+    id BIGSERIAL PRIMARY KEY,
+    phone_number VARCHAR(20) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    position VARCHAR(100) NOT NULL,
+    customer_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version BIGINT NOT NULL DEFAULT 0,
+    CONSTRAINT fk_employee_customer FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
+);
+
 CREATE TABLE object (
     id BIGSERIAL PRIMARY KEY,
     status VARCHAR(50) NOT NULL,
@@ -38,18 +50,6 @@ CREATE TABLE contract (
     version BIGINT NOT NULL DEFAULT 0,
     CONSTRAINT fk_contract_object FOREIGN KEY (object_id) REFERENCES object(id) ON DELETE CASCADE,
     CONSTRAINT uk_contract_number UNIQUE (number)
-);
-
-CREATE TABLE employee (
-    id BIGSERIAL PRIMARY KEY,
-    phone_number VARCHAR(20) NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    position VARCHAR(100) NOT NULL,
-    customer_id BIGINT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    version BIGINT NOT NULL DEFAULT 0,
-    CONSTRAINT fk_employee_customer FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
 );
 
 CREATE TABLE ppr (

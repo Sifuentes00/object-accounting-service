@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "object")
+@Table(name = "object", uniqueConstraints = @UniqueConstraint(columnNames = "responsible_employee_id"))
 @Data
 @Builder
 @NoArgsConstructor
