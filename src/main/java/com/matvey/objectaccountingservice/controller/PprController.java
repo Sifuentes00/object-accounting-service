@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class PprController {
     private final EmployeeRepository employeeRepository;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PprResponseDto> create(@Valid @RequestBody PprRequestDto dto) {
         Object object = objectRepository.findById(dto.getObjectId())
                 .orElseThrow(() -> new RuntimeException("Object not found"));
@@ -43,12 +45,14 @@ public class PprController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PprResponseDto> getById(@PathVariable Long id) {
         Ppr ppr = pprService.getById(id);
         return ResponseEntity.ok(pprMapper.toResponseDto(ppr));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<PprResponseDto>> getAll() {
         List<Ppr> pprs = pprService.getAll();
         return ResponseEntity.ok(pprs.stream()
@@ -57,6 +61,7 @@ public class PprController {
     }
 
     @GetMapping("/object/{objectId}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<PprResponseDto>> getByObjectId(@PathVariable Long objectId) {
         List<Ppr> pprs = pprService.getByObjectId(objectId);
         return ResponseEntity.ok(pprs.stream()
@@ -65,12 +70,14 @@ public class PprController {
     }
 
     @GetMapping("/number/{number}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PprResponseDto> getByNumber(@PathVariable String number) {
         Ppr ppr = pprService.getByNumber(number);
         return ResponseEntity.ok(pprMapper.toResponseDto(ppr));
     }
 
     @GetMapping("/archive-number/{archiveNumber}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<PprResponseDto>> getByArchiveNumber(@PathVariable String archiveNumber) {
         List<Ppr> pprs = pprService.getByArchiveNumber(archiveNumber);
         return ResponseEntity.ok(pprs.stream()
@@ -79,6 +86,7 @@ public class PprController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PprResponseDto> update(@PathVariable Long id, @Valid @RequestBody PprRequestDto dto) {
         Object object = objectRepository.findById(dto.getObjectId())
                 .orElseThrow(() -> new RuntimeException("Object not found"));
@@ -94,6 +102,7 @@ public class PprController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         pprService.delete(id);
         return ResponseEntity.noContent().build();

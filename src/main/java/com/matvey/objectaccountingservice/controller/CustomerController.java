@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class CustomerController {
     private final CustomerMapper customerMapper;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDto> create(@Valid @RequestBody CustomerRequestDto dto) {
         Customer customer = customerMapper.toEntity(dto);
         Customer savedCustomer = customerService.create(customer);
@@ -29,12 +31,14 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<CustomerResponseDto> getById(@PathVariable Long id) {
         Customer customer = customerService.getById(id);
         return ResponseEntity.ok(customerMapper.toResponseDto(customer));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<CustomerResponseDto>> getAll() {
         List<Customer> customers = customerService.getAll();
         return ResponseEntity.ok(customers.stream()
@@ -43,6 +47,7 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDto> update(@PathVariable Long id, @Valid @RequestBody CustomerRequestDto dto) {
         Customer customer = customerMapper.toEntity(dto);
         Customer updatedCustomer = customerService.update(id, customer);
@@ -50,6 +55,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         customerService.delete(id);
         return ResponseEntity.noContent().build();
