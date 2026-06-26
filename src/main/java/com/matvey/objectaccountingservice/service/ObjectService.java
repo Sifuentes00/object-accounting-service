@@ -24,6 +24,7 @@ public class ObjectService {
     private final ObjectRepository objectRepository;
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
+    private final StorageService storageService;
 
     public Object create(Object object) {
         log.info("Creating object with name: {}", object.getName());
@@ -86,13 +87,26 @@ public class ObjectService {
             existingObject.setResponsibleEmployee(null);
         }
 
+        String oldImageName = existingObject.getImageUniqueName();
+        String newImageName = object.getImageUniqueName();
+
         existingObject.setStatus(object.getStatus());
         existingObject.setName(object.getName());
         existingObject.setAddress(object.getAddress());
         existingObject.setWorkType(object.getWorkType());
-        existingObject.setImageUniqueName(object.getImageUniqueName());
+        existingObject.setImageUniqueName(newImageName);
         existingObject.setCustomer(customer);
         Object updatedObject = objectRepository.save(existingObject);
+
+        if (oldImageName != null && !oldImageName.equals(newImageName)) {
+            try {
+                storageService.deleteObjectImage(oldImageName);
+                log.info("Old image deleted from MinIO: {}", oldImageName);
+            } catch (Exception e) {
+                log.error("Failed to delete old image from MinIO: {}", oldImageName, e);
+            }
+        }
+
         log.info("Object updated with id: {}", updatedObject.getId());
         return updatedObject;
     }
@@ -109,6 +123,15 @@ public class ObjectService {
 
         if (!object.getPprs().isEmpty()) {
             throw new BusinessLogicException("Cannot delete object with existing PPRs");
+        }
+
+        if (object.getImageUniqueName() != null) {
+            try {
+                storageService.deleteObjectImage(object.getImageUniqueName());
+                log.info("File deleted from MinIO: {}", object.getImageUniqueName());
+            } catch (Exception e) {
+                log.error("Failed to delete file from MinIO: {}", object.getImageUniqueName(), e);
+            }
         }
 
         objectRepository.delete(object);

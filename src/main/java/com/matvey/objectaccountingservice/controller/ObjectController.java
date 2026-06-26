@@ -10,12 +10,16 @@ import com.matvey.objectaccountingservice.mapper.ObjectMapper;
 import com.matvey.objectaccountingservice.repository.CustomerRepository;
 import com.matvey.objectaccountingservice.repository.EmployeeRepository;
 import com.matvey.objectaccountingservice.service.ObjectService;
+import com.matvey.objectaccountingservice.service.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,6 +32,7 @@ public class ObjectController {
     private final ObjectMapper objectMapper;
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
+    private final StorageService storageService;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -109,5 +114,58 @@ public class ObjectController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         objectService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/image")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ObjectResponseDto> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            Object object = objectService.getById(id);
+            String fileName = storageService.uploadObjectImage(file);
+            object.setImageUniqueName(fileName);
+            Object updatedObject = objectService.update(id, object);
+            return ResponseEntity.ok(objectMapper.toResponseDto(updatedObject));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload image: " + e.getMessage(), e);
+        }
+    }
+
+    @PutMapping("/{id}/image")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ObjectResponseDto> replaceImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            Object object = objectService.getById(id);
+            if (object.getImageUniqueName() != null) {
+                storageService.replaceObjectImage(object.getImageUniqueName(), file);
+            } else {
+                String fileName = storageService.uploadObjectImage(file);
+                object.setImageUniqueName(fileName);
+            }
+            Object updatedObject = objectService.update(id, object);
+            return ResponseEntity.ok(objectMapper.toResponseDto(updatedObject));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to replace image: " + e.getMessage(), e);
+        }
+    }
+
+    @GetMapping("/{id}/image")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<byte[]> downloadImage(@PathVariable Long id) {
+        try {
+            Object object = objectService.getById(id);
+            if (object.getImageUniqueName() == null) {
+                return ResponseEntity.notFound().build();
+            }
+            byte[] imageData = storageService.downloadObjectImage(object.getImageUniqueName());
+            HttpHeaders headers = new HttpHeaders();
+            String contentType = object.getImageUniqueName().endsWith(".png") ? "image/png" : "image/jpeg";
+            headers.setContentType(MediaType.parseMediaType(contentType));
+            headers.setContentDispositionFormData("attachment", object.getImageUniqueName());
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(imageData);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download image: " + e.getMessage(), e);
+        }
     }
 }
