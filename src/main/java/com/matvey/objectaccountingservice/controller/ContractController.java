@@ -8,13 +8,18 @@ import com.matvey.objectaccountingservice.exception.InvalidDateException;
 import com.matvey.objectaccountingservice.mapper.ContractMapper;
 import com.matvey.objectaccountingservice.repository.ObjectRepository;
 import com.matvey.objectaccountingservice.service.ContractService;
+import com.matvey.objectaccountingservice.service.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -25,6 +30,7 @@ public class ContractController {
     private final ContractService contractService;
     private final ContractMapper contractMapper;
     private final ObjectRepository objectRepository;
+    private final StorageService storageService;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -91,5 +97,57 @@ public class ContractController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         contractService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/file")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ContractResponseDto> uploadFile(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            Contract contract = contractService.getById(id);
+            String fileName = storageService.uploadContract(file);
+            contract.setFileUniqueName(fileName);
+            Contract updatedContract = contractService.update(id, contract);
+            return ResponseEntity.ok(contractMapper.toResponseDto(updatedContract));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+        }
+    }
+
+    @PutMapping("/{id}/file")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ContractResponseDto> replaceFile(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            Contract contract = contractService.getById(id);
+            if (contract.getFileUniqueName() != null) {
+                storageService.replaceContract(contract.getFileUniqueName(), file);
+            } else {
+                String fileName = storageService.uploadContract(file);
+                contract.setFileUniqueName(fileName);
+            }
+            Contract updatedContract = contractService.update(id, contract);
+            return ResponseEntity.ok(contractMapper.toResponseDto(updatedContract));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to replace file: " + e.getMessage(), e);
+        }
+    }
+
+    @GetMapping("/{id}/file")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+        try {
+            Contract contract = contractService.getById(id);
+            if (contract.getFileUniqueName() == null) {
+                return ResponseEntity.notFound().build();
+            }
+            byte[] fileData = storageService.downloadContract(contract.getFileUniqueName());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", contract.getFileUniqueName());
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(fileData);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download file: " + e.getMessage(), e);
+        }
     }
 }

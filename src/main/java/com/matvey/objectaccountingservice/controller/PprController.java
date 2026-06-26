@@ -9,12 +9,16 @@ import com.matvey.objectaccountingservice.mapper.PprMapper;
 import com.matvey.objectaccountingservice.repository.EmployeeRepository;
 import com.matvey.objectaccountingservice.repository.ObjectRepository;
 import com.matvey.objectaccountingservice.service.PprService;
+import com.matvey.objectaccountingservice.service.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -27,6 +31,7 @@ public class PprController {
     private final PprMapper pprMapper;
     private final ObjectRepository objectRepository;
     private final EmployeeRepository employeeRepository;
+    private final StorageService storageService;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -106,5 +111,57 @@ public class PprController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         pprService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/file")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PprResponseDto> uploadFile(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            Ppr ppr = pprService.getById(id);
+            String fileName = storageService.uploadPpr(file);
+            ppr.setFileUniqueName(fileName);
+            Ppr updatedPpr = pprService.update(id, ppr);
+            return ResponseEntity.ok(pprMapper.toResponseDto(updatedPpr));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+        }
+    }
+
+    @PutMapping("/{id}/file")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PprResponseDto> replaceFile(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            Ppr ppr = pprService.getById(id);
+            if (ppr.getFileUniqueName() != null) {
+                storageService.replacePpr(ppr.getFileUniqueName(), file);
+            } else {
+                String fileName = storageService.uploadPpr(file);
+                ppr.setFileUniqueName(fileName);
+            }
+            Ppr updatedPpr = pprService.update(id, ppr);
+            return ResponseEntity.ok(pprMapper.toResponseDto(updatedPpr));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to replace file: " + e.getMessage(), e);
+        }
+    }
+
+    @GetMapping("/{id}/file")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+        try {
+            Ppr ppr = pprService.getById(id);
+            if (ppr.getFileUniqueName() == null) {
+                return ResponseEntity.notFound().build();
+            }
+            byte[] fileData = storageService.downloadPpr(ppr.getFileUniqueName());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", ppr.getFileUniqueName());
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(fileData);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download file: " + e.getMessage(), e);
+        }
     }
 }

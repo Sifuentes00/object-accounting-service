@@ -21,6 +21,7 @@ public class ContractService {
 
     private final ContractRepository contractRepository;
     private final ObjectRepository objectRepository;
+    private final StorageService storageService;
 
     public Contract create(Contract contract) {
         log.info("Creating contract with number: {}", contract.getNumber());
@@ -70,7 +71,7 @@ public class ContractService {
         Contract existingContract = contractRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract", id));
 
-        if (!existingContract.getNumber().equals(contract.getNumber()) 
+        if (!existingContract.getNumber().equals(contract.getNumber())
                 && contractRepository.existsByNumber(contract.getNumber())) {
             throw new DuplicateResourceException("Contract", "number", contract.getNumber());
         }
@@ -82,12 +83,25 @@ public class ContractService {
             throw new BusinessLogicException("Object already has a contract");
         }
 
+        String oldFileName = existingContract.getFileUniqueName();
+        String newFileName = contract.getFileUniqueName();
+
         existingContract.setConclusionDate(contract.getConclusionDate());
         existingContract.setEndDate(contract.getEndDate());
         existingContract.setNumber(contract.getNumber());
-        existingContract.setFileUniqueName(contract.getFileUniqueName());
+        existingContract.setFileUniqueName(newFileName);
         existingContract.setObject(object);
         Contract updatedContract = contractRepository.save(existingContract);
+
+        if (oldFileName != null && !oldFileName.equals(newFileName)) {
+            try {
+                storageService.deleteContract(oldFileName);
+                log.info("Old file deleted from MinIO: {}", oldFileName);
+            } catch (Exception e) {
+                log.error("Failed to delete old file from MinIO: {}", oldFileName, e);
+            }
+        }
+
         log.info("Contract updated with id: {}", updatedContract.getId());
         return updatedContract;
     }
@@ -97,6 +111,16 @@ public class ContractService {
         log.info("Deleting contract with id: {}", id);
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract", id));
+        
+        if (contract.getFileUniqueName() != null) {
+            try {
+                storageService.deleteContract(contract.getFileUniqueName());
+                log.info("File deleted from MinIO: {}", contract.getFileUniqueName());
+            } catch (Exception e) {
+                log.error("Failed to delete file from MinIO: {}", contract.getFileUniqueName(), e);
+            }
+        }
+        
         contractRepository.delete(contract);
         log.info("Contract deleted with id: {}", id);
     }

@@ -23,6 +23,7 @@ public class PprService {
     private final PprRepository pprRepository;
     private final ObjectRepository objectRepository;
     private final EmployeeRepository employeeRepository;
+    private final StorageService storageService;
 
     public Ppr create(Ppr ppr) {
         log.info("Creating ppr with number: {}", ppr.getNumber());
@@ -79,7 +80,7 @@ public class PprService {
         Ppr existingPpr = pprRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ppr", id));
 
-        if (!existingPpr.getNumber().equals(ppr.getNumber()) 
+        if (!existingPpr.getNumber().equals(ppr.getNumber())
                 && pprRepository.existsByNumber(ppr.getNumber())) {
             throw new DuplicateResourceException("Ppr", "number", ppr.getNumber());
         }
@@ -95,12 +96,25 @@ public class PprService {
             existingPpr.setEmployee(null);
         }
 
+        String oldFileName = existingPpr.getFileUniqueName();
+        String newFileName = ppr.getFileUniqueName();
+
         existingPpr.setName(ppr.getName());
         existingPpr.setArchiveNumber(ppr.getArchiveNumber());
         existingPpr.setNumber(ppr.getNumber());
-        existingPpr.setFileUniqueName(ppr.getFileUniqueName());
+        existingPpr.setFileUniqueName(newFileName);
         existingPpr.setObject(object);
         Ppr updatedPpr = pprRepository.save(existingPpr);
+
+        if (oldFileName != null && !oldFileName.equals(newFileName)) {
+            try {
+                storageService.deletePpr(oldFileName);
+                log.info("Old file deleted from MinIO: {}", oldFileName);
+            } catch (Exception e) {
+                log.error("Failed to delete old file from MinIO: {}", oldFileName, e);
+            }
+        }
+
         log.info("Ppr updated with id: {}", updatedPpr.getId());
         return updatedPpr;
     }
@@ -110,6 +124,16 @@ public class PprService {
         log.info("Deleting ppr with id: {}", id);
         Ppr ppr = pprRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ppr", id));
+        
+        if (ppr.getFileUniqueName() != null) {
+            try {
+                storageService.deletePpr(ppr.getFileUniqueName());
+                log.info("File deleted from MinIO: {}", ppr.getFileUniqueName());
+            } catch (Exception e) {
+                log.error("Failed to delete file from MinIO: {}", ppr.getFileUniqueName(), e);
+            }
+        }
+        
         pprRepository.delete(ppr);
         log.info("Ppr deleted with id: {}", id);
     }
