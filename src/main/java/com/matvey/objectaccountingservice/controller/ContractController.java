@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class ContractController {
     private final ObjectRepository objectRepository;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ContractResponseDto> create(@Valid @RequestBody ContractRequestDto dto) {
         if (dto.getEndDate().isBefore(dto.getConclusionDate())) {
             throw new InvalidDateException("End date cannot be before conclusion date");
@@ -39,12 +41,14 @@ public class ContractController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ContractResponseDto> getById(@PathVariable Long id) {
         Contract contract = contractService.getById(id);
         return ResponseEntity.ok(contractMapper.toResponseDto(contract));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<ContractResponseDto>> getAll() {
         List<Contract> contracts = contractService.getAll();
         return ResponseEntity.ok(contracts.stream()
@@ -53,6 +57,7 @@ public class ContractController {
     }
 
     @GetMapping("/object/{objectId}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<ContractResponseDto>> getByObjectId(@PathVariable Long objectId) {
         List<Contract> contracts = contractService.getByObjectId(objectId);
         return ResponseEntity.ok(contracts.stream()
@@ -61,12 +66,14 @@ public class ContractController {
     }
 
     @GetMapping("/number/{number}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ContractResponseDto> getByNumber(@PathVariable String number) {
         Contract contract = contractService.getByNumber(number);
         return ResponseEntity.ok(contractMapper.toResponseDto(contract));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ContractResponseDto> update(@PathVariable Long id, @Valid @RequestBody ContractRequestDto dto) {
         if (dto.getEndDate().isBefore(dto.getConclusionDate())) {
             throw new InvalidDateException("End date cannot be before conclusion date");
@@ -80,6 +87,7 @@ public class ContractController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         contractService.delete(id);
         return ResponseEntity.noContent().build();

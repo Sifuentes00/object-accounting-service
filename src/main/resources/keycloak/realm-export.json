@@ -1,0 +1,67 @@
+{
+  "realm": "object-accounting",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "USER",
+        "description": "Regular user with read-only access"
+      },
+      {
+        "name": "ADMIN",
+        "description": "Admin user with full access"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "object-accounting-app",
+      "name": "Object Accounting Service",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "object-accounting-secret",
+      "redirectUris": [
+        "http://localhost:8090/*",
+        "http://localhost:8091/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8090",
+        "http://localhost:8091"
+      ],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ]
+}

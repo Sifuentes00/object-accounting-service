@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class EmployeeController {
     private static final Pattern PHONE_PATTERN = Pattern.compile("^\\+?[0-9]{10,15}$");
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
         if (!PHONE_PATTERN.matcher(dto.getPhoneNumber()).matches()) {
             throw new InvalidPhoneNumberException("Phone number must be 10-15 digits, optionally starting with +");
@@ -41,12 +43,14 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<EmployeeResponseDto> getById(@PathVariable Long id) {
         Employee employee = employeeService.getById(id);
         return ResponseEntity.ok(employeeMapper.toResponseDto(employee));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<EmployeeResponseDto>> getAll() {
         List<Employee> employees = employeeService.getAll();
         return ResponseEntity.ok(employees.stream()
@@ -55,6 +59,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/customer/{customerId}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<EmployeeResponseDto>> getByCustomerId(@PathVariable Long customerId) {
         List<Employee> employees = employeeService.getByCustomerId(customerId);
         return ResponseEntity.ok(employees.stream()
@@ -63,6 +68,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmployeeResponseDto> update(@PathVariable Long id, @Valid @RequestBody EmployeeRequestDto dto) {
         if (!PHONE_PATTERN.matcher(dto.getPhoneNumber()).matches()) {
             throw new InvalidPhoneNumberException("Phone number must be 10-15 digits, optionally starting with +");
@@ -76,6 +82,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         employeeService.delete(id);
         return ResponseEntity.noContent().build();
