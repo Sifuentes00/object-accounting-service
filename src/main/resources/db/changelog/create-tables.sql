@@ -1,5 +1,3 @@
-CREATE TYPE work_type_enum AS ENUM ('DESIGN', 'GEODESY', 'CONSTRUCTION_INSTALLATION');
-
 CREATE TABLE customer (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -26,7 +24,7 @@ CREATE TABLE object (
     status VARCHAR(50) NOT NULL,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(500) NOT NULL,
-    work_type work_type_enum NOT NULL,
+    work_type VARCHAR(50) NOT NULL,
     image_unique_name VARCHAR(255),
     customer_id BIGINT NOT NULL,
     responsible_employee_id BIGINT,
@@ -35,7 +33,8 @@ CREATE TABLE object (
     version BIGINT NOT NULL DEFAULT 0,
     CONSTRAINT fk_object_customer FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE RESTRICT,
     CONSTRAINT fk_object_responsible_employee FOREIGN KEY (responsible_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
-    CONSTRAINT uk_object_responsible_employee UNIQUE (responsible_employee_id)
+    CONSTRAINT uk_object_responsible_employee UNIQUE (responsible_employee_id),
+    CONSTRAINT chk_work_type CHECK (work_type IN ('DESIGN', 'GEODESY', 'CONSTRUCTION_INSTALLATION'))
 );
 
 CREATE TABLE contract (
