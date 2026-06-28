@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 public class ObjectRequestDto {
 
     @NotBlank(message = "Status is required")
-    @Size(max = 50, message = "Status must not exceed 50 characters")
     private String status;
 
     @NotBlank(message = "Name is required")

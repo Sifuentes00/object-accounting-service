@@ -21,7 +21,7 @@ CREATE TABLE employee (
 
 CREATE TABLE object (
     id BIGSERIAL PRIMARY KEY,
-    status VARCHAR(50) NOT NULL,
+    status TEXT NOT NULL,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(500) NOT NULL,
     work_type VARCHAR(50) NOT NULL,
