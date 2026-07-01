@@ -52,7 +52,7 @@ public class ObjectService {
 
     public List<Object> getAll() {
         log.info("Getting all objects");
-        return objectRepository.findAll();
+        return objectRepository.findAllOrderByCreatedAt();
     }
 
     public List<Object> getByCustomerId(Long customerId) {

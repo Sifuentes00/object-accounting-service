@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 interface EditModeContextType {
   editMode: boolean;
@@ -8,7 +8,13 @@ interface EditModeContextType {
 const EditModeContext = createContext<EditModeContextType | undefined>(undefined);
 
 export function EditModeProvider({ children }: { children: ReactNode }) {
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode] = useState(() => {
+    return localStorage.getItem('editMode') === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('editMode', editMode.toString());
+  }, [editMode]);
 
   return (
     <EditModeContext.Provider value={{ editMode, setEditMode }}>

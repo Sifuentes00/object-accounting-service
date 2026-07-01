@@ -39,6 +39,8 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [employeeError, setEmployeeError] = useState('');
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>('');
+  const [newImagePreview, setNewImagePreview] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -56,6 +58,12 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
         if (object.customer?.id) {
           loadEmployees(object.customer.id.toString());
         }
+        // Load current image preview
+        if (object.imageUniqueName) {
+          loadCurrentImage(object.id);
+        } else {
+          setCurrentImageUrl('');
+        }
       } else {
         setFormData({
           name: '',
@@ -67,9 +75,52 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
           image: null,
         });
         setEmployees([]);
+        setCurrentImageUrl('');
       }
+      setNewImagePreview('');
     }
   }, [object, isOpen]);
+
+  const loadCurrentImage = async (objectId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8090/api/v1/objects/${objectId}/image`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setCurrentImageUrl(url);
+      }
+    } catch (error) {
+      console.error('Error loading current image:', error);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    console.log('File selected:', file?.name);
+    setFormData({ ...formData, image: file || null });
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        console.log('FileReader completed, setting preview, length:', (reader.result as string).length);
+        setNewImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      console.log('No file selected, clearing preview');
+      setNewImagePreview('');
+    }
+  };
+
+  // Debug: log when newImagePreview changes
+  useEffect(() => {
+    console.log('newImagePreview changed:', newImagePreview ? 'has value' : 'empty');
+  }, [newImagePreview]);
 
   const loadCustomers = async () => {
     setLoadingCustomers(true);
@@ -181,11 +232,26 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Статус</label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    // Автоматически вставлять переносы каждые 50 символов
+                    const lines = value.split('\n');
+                    const processedLines = lines.map(line => {
+                      if (line.length > 50) {
+                        let result = '';
+                        for (let i = 0; i < line.length; i += 50) {
+                          result += line.slice(i, i + 50) + '\n';
+                        }
+                        return result.trim();
+                      }
+                      return line;
+                    });
+                    setFormData({ ...formData, status: processedLines.join('\n') });
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 resize-y"
+                  rows={3}
                 />
               </div>
 
@@ -258,14 +324,23 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Фото объекта</label>
                 <input
+                  key={newImagePreview || 'file-input'}
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
+                  onChange={handleImageChange}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 />
-                {object?.imageUniqueName && !formData.image && (
-                  <p className="text-sm text-gray-500 mt-1">Текущее фото: {object.imageUniqueName}</p>
-                )}
+                {newImagePreview ? (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-1">Новое фото:</p>
+                    <img src={newImagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg border border-gray-300" />
+                  </div>
+                ) : currentImageUrl ? (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-1">Текущее фото:</p>
+                    <img src={currentImageUrl} alt="Current" className="w-32 h-32 object-cover rounded-lg border border-gray-300" />
+                  </div>
+                ) : null}
               </div>
             </div>
 

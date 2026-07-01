@@ -34,6 +34,14 @@ const formatWorkType = (workType: string): string => {
   return workTypeMap[workType] || workType;
 };
 
+const formatStatusWithLineBreaks = (status: string) => {
+  if (!status) return '';
+  console.log('Raw status:', JSON.stringify(status));
+  const result = status.replace(/\n/g, '<br />');
+  console.log('Formatted status:', result);
+  return result;
+};
+
 export default function Objects() {
   const { role } = useAuth();
   const { editMode } = useEditMode();
@@ -158,6 +166,7 @@ export default function Objects() {
         
         await loadObjects();
         setIsModalOpen(false);
+        window.location.reload();
       } else {
         const errorText = await response.text();
         console.error('Failed to save object:', response.statusText, errorText);
@@ -258,7 +267,7 @@ export default function Objects() {
             <div className="grid grid-cols-3 gap-6 p-6">
               <div className="col-span-1">
                 {imageUrls[obj.id] ? (
-                  <img src={imageUrls[obj.id]} alt={obj.name} className="w-full h-auto object-cover rounded-lg" style={{ minHeight: '300px' }} />
+                  <img src={imageUrls[obj.id]} alt={obj.name} className="w-full h-80 object-cover rounded-lg" />
                 ) : obj.imageUniqueName ? (
                   <div className="w-full h-80 bg-gray-200 flex items-center justify-center rounded-lg">
                     <span className="text-gray-400">Загрузка...</span>
@@ -280,27 +289,29 @@ export default function Objects() {
                   <div className="mb-6">
                     <span className="text-gray-600 text-lg">Текущее состояние:</span>
                     {editMode ? (
-                      <div className="flex items-center gap-2 mt-2">
-                        <input 
-                          type="text" 
+                      <div className="flex flex-col gap-2 mt-2">
+                        <textarea 
                           value={editingStatusId === obj.id ? editingStatusValue : obj.status}
-                          maxLength={100}
                           onChange={(e) => {
                             handleStatusChange(obj.id, e.target.value);
                           }}
-                          className="border border-gray-300 rounded px-4 py-3 w-full text-lg"
+                          className="border border-gray-300 rounded px-4 py-3 w-full text-lg resize-y min-h-[60px]"
+                          rows={2}
                         />
                         {editingStatusId === obj.id && (
                           <button 
                             onClick={handleApplyStatus}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded text-lg whitespace-nowrap"
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded text-lg w-fit"
                           >
                             Применить
                           </button>
                         )}
                       </div>
                     ) : (
-                      <span className="ml-3 font-medium text-gray-800 text-lg">{obj.status}</span>
+                      <div 
+                        className="ml-3 font-medium text-gray-800 text-lg" 
+                        dangerouslySetInnerHTML={{ __html: formatStatusWithLineBreaks(obj.status) }}
+                      />
                     )}
                   </div>
 

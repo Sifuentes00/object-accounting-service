@@ -18,4 +18,7 @@ public interface ObjectRepository extends JpaRepository<Object, Long> {
     
     @Query("SELECT o FROM Object o WHERE o.customer.id = :customerId AND o.workType = :workType")
     List<Object> findByCustomerIdAndWorkType(@Param("customerId") Long customerId, @Param("workType") WorkType workType);
+    
+    @Query("SELECT o FROM Object o ORDER BY o.createdAt ASC")
+    List<Object> findAllOrderByCreatedAt();
 }
