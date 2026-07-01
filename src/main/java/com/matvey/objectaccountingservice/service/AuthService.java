@@ -33,14 +33,28 @@ public class AuthService {
 
     public AuthResponseDto register(RegisterRequestDto request) {
         String adminToken = getAdminToken();
-        createUserInKeycloak(request, adminToken);
+        String userId = createUserInKeycloak(request, adminToken);
+        
+        try {
+            ensureRoleExists(adminToken, "USER");
+            assignRoleToUser(userId, adminToken, "USER");
+        } catch (Exception e) {
+            System.err.println("Failed to assign USER role: " + e.getMessage());
+        }
+        
         String token = loginUser(request.getUsername(), request.getPassword());
-        return new AuthResponseDto(token, request.getFirstName() + " " + request.getLastName());
+        String fullName = getUserFullNameFromToken(token);
+        String email = getUserEmailFromToken(token);
+        String role = getUserRoleFromToken(token);
+        return new AuthResponseDto(token, fullName, email, role);
     }
 
     public AuthResponseDto login(String username, String password) {
         String token = loginUser(username, password);
-        return new AuthResponseDto(token, username);
+        String fullName = getUserFullNameFromToken(token);
+        String email = getUserEmailFromToken(token);
+        String role = getUserRoleFromToken(token);
+        return new AuthResponseDto(token, fullName, email, role);
     }
 
     private String getAdminToken() {
@@ -70,7 +84,79 @@ public class AuthService {
         }
     }
 
-    private void createUserInKeycloak(RegisterRequestDto request, String adminToken) {
+    private void ensureRoleExists(String adminToken, String roleName) {
+        try {
+            String roleId = getRoleId(adminToken, roleName);
+            System.out.println("Role " + roleName + " exists with ID: " + roleId);
+        } catch (Exception e) {
+            System.out.println("Role " + roleName + " not found, creating it...");
+            createRole(adminToken, roleName);
+        }
+    }
+
+    private void createRole(String adminToken, String roleName) {
+        String url = keycloakUrl + "/admin/realms/" + realm + "/roles";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(adminToken);
+
+        String roleJson = String.format(
+            "{\"name\":\"%s\",\"description\":\"%s role\"}",
+            roleName,
+            roleName
+        );
+
+        HttpEntity<String> entity = new HttpEntity<>(roleJson, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+        if (response.getStatusCode() != HttpStatus.CREATED && response.getStatusCode() != HttpStatus.CONFLICT) {
+            throw new RuntimeException("Failed to create role: " + response.getBody());
+        }
+    }
+
+    private String getRoleId(String adminToken, String roleName) {
+        String url = keycloakUrl + "/admin/realms/" + realm + "/roles/" + roleName;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(adminToken);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("Failed to get role: " + response.getBody());
+        }
+
+        try {
+            JsonNode root = objectMapper.readTree(response.getBody());
+            return root.get("id").asText();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse role response", e);
+        }
+    }
+
+    private void assignRoleToUserById(String userId, String adminToken, String roleId) {
+        String url = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(adminToken);
+
+        String roleJson = String.format(
+            "[{\"id\":\"%s\",\"name\":\"USER\"}]",
+            roleId
+        );
+
+        HttpEntity<String> entity = new HttpEntity<>(roleJson, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+        if (response.getStatusCode() != HttpStatus.NO_CONTENT && response.getStatusCode() != HttpStatus.CREATED) {
+            throw new RuntimeException("Failed to assign role to user: " + response.getBody());
+        }
+    }
+
+    private String createUserInKeycloak(RegisterRequestDto request, String adminToken) {
         String url = keycloakUrl + "/admin/realms/" + realm + "/users";
 
         HttpHeaders headers = new HttpHeaders();
@@ -91,6 +177,85 @@ public class AuthService {
 
         if (response.getStatusCode() != HttpStatus.CREATED) {
             throw new RuntimeException("Failed to create user in Keycloak: " + response.getBody());
+        }
+
+        String location = response.getHeaders().getLocation().toString();
+        return location.substring(location.lastIndexOf('/') + 1);
+    }
+
+    private void assignRoleToUser(String userId, String adminToken, String roleName) {
+        String url = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(adminToken);
+
+        String roleId = getRoleId(adminToken, roleName);
+        String roleJson = String.format(
+            "[{\"id\":\"%s\",\"name\":\"%s\"}]",
+            roleId,
+            roleName
+        );
+
+        System.out.println("Assigning role " + roleName + " to user " + userId);
+        System.out.println("URL: " + url);
+        System.out.println("Role JSON: " + roleJson);
+
+        HttpEntity<String> entity = new HttpEntity<>(roleJson, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+        System.out.println("Response status: " + response.getStatusCode());
+        System.out.println("Response body: " + response.getBody());
+
+        if (response.getStatusCode() != HttpStatus.NO_CONTENT && response.getStatusCode() != HttpStatus.CREATED) {
+            throw new RuntimeException("Failed to assign role to user: " + response.getBody());
+        }
+    }
+
+    private String getUserRoleFromToken(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            JsonNode root = objectMapper.readTree(payload);
+            JsonNode roles = root.get("realm_access").get("roles");
+            if (roles != null && roles.isArray()) {
+                for (JsonNode role : roles) {
+                    String roleName = role.asText();
+                    if ("ADMIN".equals(roleName)) {
+                        return "ADMIN";
+                    }
+                }
+                if (roles.size() > 0) {
+                    return roles.get(0).asText();
+                }
+            }
+            return "USER";
+        } catch (Exception e) {
+            return "USER";
+        }
+    }
+
+    private String getUserFullNameFromToken(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            JsonNode root = objectMapper.readTree(payload);
+            String firstName = root.get("given_name") != null ? root.get("given_name").asText() : "";
+            String lastName = root.get("family_name") != null ? root.get("family_name").asText() : "";
+            return (firstName + " " + lastName).trim();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private String getUserEmailFromToken(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            JsonNode root = objectMapper.readTree(payload);
+            return root.get("email") != null ? root.get("email").asText() : "";
+        } catch (Exception e) {
+            return "";
         }
     }
 

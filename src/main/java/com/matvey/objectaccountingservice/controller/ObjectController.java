@@ -9,6 +9,7 @@ import com.matvey.objectaccountingservice.enums.WorkType;
 import com.matvey.objectaccountingservice.mapper.ObjectMapper;
 import com.matvey.objectaccountingservice.repository.CustomerRepository;
 import com.matvey.objectaccountingservice.repository.EmployeeRepository;
+import com.matvey.objectaccountingservice.repository.ObjectRepository;
 import com.matvey.objectaccountingservice.service.ObjectService;
 import com.matvey.objectaccountingservice.service.StorageService;
 import jakarta.validation.Valid;
@@ -21,6 +22,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 import java.util.List;
 
 @RestController
@@ -32,21 +35,22 @@ public class ObjectController {
     private final ObjectMapper objectMapper;
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
+    private final ObjectRepository objectRepository;
     private final StorageService storageService;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ObjectResponseDto> create(@Valid @RequestBody ObjectRequestDto dto) {
+        Object object = objectMapper.toEntity(dto);
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
-        Object object = objectMapper.toEntity(dto);
         object.setCustomer(customer);
         if (dto.getResponsibleEmployeeId() != null) {
             Employee employee = employeeRepository.findById(dto.getResponsibleEmployeeId())
                     .orElseThrow(() -> new RuntimeException("Employee not found"));
             object.setResponsibleEmployee(employee);
         }
-        Object savedObject = objectService.create(object);
+        Object savedObject = objectRepository.save(object);
         return new ResponseEntity<>(objectMapper.toResponseDto(savedObject), HttpStatus.CREATED);
     }
 
@@ -96,16 +100,34 @@ public class ObjectController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ObjectResponseDto> update(@PathVariable Long id, @Valid @RequestBody ObjectRequestDto dto) {
+        Object existingObject = objectService.getById(id);
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
-        Object object = objectMapper.toEntity(dto);
-        object.setCustomer(customer);
+        
+        existingObject.setName(dto.getName());
+        existingObject.setStatus(dto.getStatus());
+        existingObject.setAddress(dto.getAddress());
+        existingObject.setWorkType(dto.getWorkType());
+        existingObject.setCustomer(customer);
+        
         if (dto.getResponsibleEmployeeId() != null) {
             Employee employee = employeeRepository.findById(dto.getResponsibleEmployeeId())
                     .orElseThrow(() -> new RuntimeException("Employee not found"));
-            object.setResponsibleEmployee(employee);
+            existingObject.setResponsibleEmployee(employee);
+        } else {
+            existingObject.setResponsibleEmployee(null);
         }
-        Object updatedObject = objectService.update(id, object);
+        
+        Object updatedObject = objectRepository.save(existingObject);
+        return ResponseEntity.ok(objectMapper.toResponseDto(updatedObject));
+    }
+
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<ObjectResponseDto> updateStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        Object existingObject = objectService.getById(id);
+        existingObject.setStatus(request.get("status"));
+        Object updatedObject = objectRepository.save(existingObject);
         return ResponseEntity.ok(objectMapper.toResponseDto(updatedObject));
     }
 
@@ -123,7 +145,7 @@ public class ObjectController {
             Object object = objectService.getById(id);
             String fileName = storageService.uploadObjectImage(file);
             object.setImageUniqueName(fileName);
-            Object updatedObject = objectService.update(id, object);
+            Object updatedObject = objectRepository.save(object);
             return ResponseEntity.ok(objectMapper.toResponseDto(updatedObject));
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload image: " + e.getMessage(), e);

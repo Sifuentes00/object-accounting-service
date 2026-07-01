@@ -8,7 +8,14 @@ export interface RegisterRequest {
   password: string;
 }
 
-export async function registerUser(data: RegisterRequest): Promise<{ token: string; fullName: string }> {
+export interface AuthResponse {
+  token: string;
+  fullName: string;
+  email: string;
+  role: string;
+}
+
+export async function registerUser(data: RegisterRequest): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
     method: 'POST',
     headers: {
@@ -25,7 +32,7 @@ export async function registerUser(data: RegisterRequest): Promise<{ token: stri
   return await response.json();
 }
 
-export async function loginUser(username: string, password: string): Promise<{ token: string; fullName: string }> {
+export async function loginUser(username: string, password: string): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: {

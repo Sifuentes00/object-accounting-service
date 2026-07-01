@@ -20,9 +20,29 @@ public class ObjectResponseDto {
     private String address;
     private WorkType workType;
     private String imageUniqueName;
-    private Long customerId;
-    private Long responsibleEmployeeId;
+    private CustomerResponse customer;
+    private EmployeeResponse responsibleEmployee;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long version;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CustomerResponse {
+        private Long id;
+        private String name;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EmployeeResponse {
+        private Long id;
+        private String fullName;
+        private String position;
+        private String phoneNumber;
+    }
 }

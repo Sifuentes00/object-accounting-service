@@ -59,12 +59,13 @@ export default function Login() {
   const username = `${transliterate(lastName)}.${transliterate(firstName)}`;
 
   if (!isLogin) {
-        await registerUser({ username, email, firstName, lastName, password });
+        const response = await registerUser({ username, email, firstName, lastName, password });
+        login(response.fullName, response.email, response.role, response.token);
       } else {
-        await loginUser(username, password);
+        const response = await loginUser(username, password);
+        login(response.fullName, response.email, response.role, response.token);
       }
       
-      login();
       navigate('/main');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка');
@@ -75,9 +76,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col">
-      <Header />
+      <Header hideProfile={true} />
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+      <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
               {isLogin ? 'Вход в систему' : 'Регистрация'}
@@ -161,6 +162,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
   );
 }
