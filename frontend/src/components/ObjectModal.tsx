@@ -236,7 +236,6 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
                   value={formData.status}
                   onChange={(e) => {
                     let value = e.target.value;
-                    // Автоматически вставлять переносы каждые 50 символов
                     const lines = value.split('\n');
                     const processedLines = lines.map(line => {
                       if (line.length > 50) {
@@ -288,7 +287,7 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
                   disabled={loadingCustomers}
                 >
                   <option value="">Выберите заказчика</option>
-                  {customers.map((customer) => (
+                  {customers.filter(c => c.name !== 'ЗАО "БЕЛСПЕЦЭНЕРГО"').map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.name}
                     </option>

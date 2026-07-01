@@ -13,6 +13,7 @@ public interface EmployeeMapper {
     Employee toEntity(EmployeeRequestDto dto);
 
     @Mapping(source = "customer.id", target = "customerId")
+    @Mapping(source = "customer.name", target = "customerName")
     EmployeeResponseDto toResponseDto(Employee entity);
 
     void updateEntityFromDto(EmployeeRequestDto dto, @MappingTarget Employee entity);

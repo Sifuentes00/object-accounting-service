@@ -18,6 +18,7 @@ public class EmployeeResponseDto {
     private String fullName;
     private String position;
     private Long customerId;
+    private String customerName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long version;

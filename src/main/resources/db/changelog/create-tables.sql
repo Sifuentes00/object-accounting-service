@@ -74,9 +74,5 @@ CREATE INDEX idx_employee_customer_id ON employee(customer_id);
 CREATE INDEX idx_ppr_object_id ON ppr(object_id);
 CREATE INDEX idx_ppr_employee_id ON ppr(employee_id);
 
--- Test data
 INSERT INTO customer (name, legal_address, created_at, updated_at, version)
-VALUES ('ООО "СтройМастер"', 'г. Минск, ул. Строителей, д. 1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
-
-INSERT INTO employee (phone_number, full_name, position, customer_id, created_at, updated_at, version)
-VALUES ('+375291234567', 'Иванов Иван Иванович', 'Инженер', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+VALUES ('ЗАО "БЕЛСПЕЦЭНЕРГО"', 'г.Минск, ул.Фабричная, д.6', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);

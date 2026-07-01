@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEditMode } from '../context/EditModeContext';
 
@@ -11,9 +11,11 @@ export default function Header({ hideProfile = false }: HeaderProps) {
   const { fullName, email, role, logout, isAuthenticated } = useAuth();
   const { editMode, setEditMode } = useEditMode();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showProfile, setShowProfile] = useState(false);
 
   const isAdmin = role === 'ADMIN';
+  const isObjectsPage = location.pathname === '/main' || location.pathname === '/main/';
 
   const handleLogout = () => {
     logout();
@@ -25,13 +27,18 @@ export default function Header({ hideProfile = false }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-24">
           <div className="flex items-center space-x-4 -ml-24">
-            <img 
-              src="/logo.jpeg" 
-              alt="Логотип" 
-              className="w-12 h-12 rounded-xl"
-            />
-            <div>
-              <div className="text-xl font-bold text-white">ЗАО БЕЛСПЕЦЭНЕРГО</div>
+            <div 
+              className="flex items-center space-x-4 cursor-pointer"
+              onClick={() => isAuthenticated && navigate('/main')}
+            >
+              <img 
+                src="/logo.jpeg" 
+                alt="Логотип" 
+                className="w-12 h-12 rounded-xl"
+              />
+              <div>
+                <div className="text-xl font-bold text-white">ЗАО БЕЛСПЕЦЭНЕРГО</div>
+              </div>
             </div>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2">
@@ -63,22 +70,30 @@ export default function Header({ hideProfile = false }: HeaderProps) {
                     
                     {isAdmin && (
                       <div className="border-b">
-                        <button className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors">
+                        <button 
+                          className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => navigate('/main/employees')}
+                        >
                           Просмотреть сотрудников
                         </button>
-                        <button className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors">
+                        <button 
+                          className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => navigate('/main/customers')}
+                        >
                           Просмотреть заказчиков
                         </button>
-                        <button 
-                          className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-between"
-                          onClick={() => setEditMode(!editMode)}
-                        >
-                          <span>Режим редактирования</span>
-                          <div className="relative">
-                            <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${editMode ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${editMode ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
-                          </div>
-                        </button>
+                        {isObjectsPage && (
+                          <button 
+                            className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-between"
+                            onClick={() => setEditMode(!editMode)}
+                          >
+                            <span>Режим редактирования</span>
+                            <div className="relative">
+                              <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${editMode ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${editMode ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
+                            </div>
+                          </button>
+                        )}
                       </div>
                     )}
                     
