@@ -8,9 +8,14 @@ interface EditModeContextType {
 const EditModeContext = createContext<EditModeContextType | undefined>(undefined);
 
 export function EditModeProvider({ children }: { children: ReactNode }) {
-  const [editMode, setEditMode] = useState(() => {
-    return localStorage.getItem('editMode') === 'true';
-  });
+  const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    const savedMode = localStorage.getItem('editMode');
+    if (savedMode === 'true') {
+      setEditMode(true);
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('editMode', editMode.toString());

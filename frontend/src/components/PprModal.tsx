@@ -18,6 +18,9 @@ export default function PprModal({ isOpen, onClose, onSave, ppr, objectId, emplo
     file: null as File | null,
   });
 
+  console.log('PprModal employees:', employees);
+  console.log('PprModal employees filtered:', employees.filter(e => e.customer?.name?.includes('БЕЛСПЕЦЭНЕРГО') || !e.customerId));
+
   useEffect(() => {
     if (ppr) {
       setFormData({
@@ -99,7 +102,7 @@ export default function PprModal({ isOpen, onClose, onSave, ppr, objectId, emplo
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="">Не выбран</option>
-                {employees.map((employee) => (
+                {employees.filter(e => e.customerName?.includes('БЕЛСПЕЦЭНЕРГО')).map((employee) => (
                   <option key={employee.id} value={employee.id}>
                     {employee.fullName}
                   </option>

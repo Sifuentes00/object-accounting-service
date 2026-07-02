@@ -27,7 +27,7 @@ export default function Customers() {
   const loadCustomers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8090/api/v1/customers', {
+      const response = await fetch('/api/v1/customers', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -35,7 +35,7 @@ export default function Customers() {
       if (response.ok) {
         const data = await response.json();
         console.log('Loaded customers:', data);
-        console.log('First customer employees:', data[0]?.employees);
+        console.log('Customer names:', data.map((c: Customer) => c.name));
         setCustomers(data);
       }
     } catch (error) {
@@ -60,7 +60,7 @@ export default function Customers() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/customers/${id}`, {
+      const response = await fetch(`/api/v1/customers/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -80,10 +80,11 @@ export default function Customers() {
   const handleSaveCustomer = async (data: any) => {
     try {
       const token = localStorage.getItem('token');
+      console.log('Token:', token ? token.substring(0, 20) + '...' : 'null');
       let response;
       
       if (editingCustomer) {
-        response = await fetch(`http://localhost:8090/api/v1/customers/${editingCustomer.id}`, {
+        response = await fetch(`/api/v1/customers/${editingCustomer.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -92,7 +93,7 @@ export default function Customers() {
           body: JSON.stringify(data),
         });
       } else {
-        response = await fetch('http://localhost:8090/api/v1/customers', {
+        response = await fetch('/api/v1/customers', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -101,6 +102,9 @@ export default function Customers() {
           body: JSON.stringify(data),
         });
       }
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
 
       if (response.ok) {
         await loadCustomers();
@@ -112,6 +116,10 @@ export default function Customers() {
       console.error('Error saving customer:', error);
     }
   };
+
+  const filteredCustomers = customers.filter(c => 
+  !c.name.includes('БЕЛСПЕЦЭНЕРГО')
+);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -149,7 +157,7 @@ export default function Customers() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {customers.filter(c => c.name !== 'ЗАО "БЕЛСПЕЦЭНЕРГО"').map((customer) => (
+              {filteredCustomers.map((customer) => (
                 <tr key={customer.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {customer.name}
@@ -190,7 +198,7 @@ export default function Customers() {
               ))}
             </tbody>
           </table>
-          {customers.length === 0 && (
+          {filteredCustomers.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               Нет заказчиков
             </div>

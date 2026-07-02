@@ -20,6 +20,9 @@ target/
 *.ipr
 .env
 /frontend/.env.frontend
+.env.example
+/frontend/.env.example
+/frontend/.env
 
 ### NetBeans ###
 /nbproject/private/
