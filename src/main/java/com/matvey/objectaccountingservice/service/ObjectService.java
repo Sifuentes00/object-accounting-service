@@ -39,6 +39,9 @@ public class ObjectService {
         }
 
         object.setCustomer(customer);
+        if (object.getStatus() == null) {
+            object.setStatus("");
+        }
         Object savedObject = objectRepository.save(object);
         log.info("Object created with id: {}", savedObject.getId());
         return savedObject;
@@ -118,11 +121,11 @@ public class ObjectService {
                 .orElseThrow(() -> new ResourceNotFoundException("Object", id));
 
         if (object.getContract() != null) {
-            throw new BusinessLogicException("Cannot delete object with existing contract");
+            throw new BusinessLogicException("Нельзя удалить объект с существующим договором");
         }
 
         if (!object.getPprs().isEmpty()) {
-            throw new BusinessLogicException("Cannot delete object with existing PPRs");
+            throw new BusinessLogicException("Нельзя удалить объект с существующими ППР");
         }
 
         if (object.getImageUniqueName() != null) {

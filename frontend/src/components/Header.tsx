@@ -15,7 +15,9 @@ export default function Header({ hideProfile = false }: HeaderProps) {
   const [showProfile, setShowProfile] = useState(false);
 
   const isAdmin = role === 'ADMIN';
-  const isObjectsPage = location.pathname === '/main' || location.pathname === '/main/';
+  const isCustomersPage = location.pathname.startsWith('/main/customers');
+  const isEmployeesPage = location.pathname.startsWith('/main/employees');
+  const showEditModeToggle = !(isCustomersPage || isEmployeesPage);
 
   const handleLogout = () => {
     logout();
@@ -82,7 +84,7 @@ export default function Header({ hideProfile = false }: HeaderProps) {
                         >
                           Просмотреть заказчиков
                         </button>
-                        {isObjectsPage && (
+                        {showEditModeToggle && (
                           <button 
                             className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-between"
                             onClick={() => setEditMode(!editMode)}

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEditMode } from '../context/EditModeContext';
+import { useError } from '../context/ErrorContext';
 import ObjectModal from '../components/ObjectModal';
 
 interface Object {
@@ -45,6 +47,8 @@ const formatStatusWithLineBreaks = (status: string) => {
 export default function Objects() {
   const { role } = useAuth();
   const { editMode } = useEditMode();
+  const { showError } = useError();
+  const navigate = useNavigate();
   const isAdmin = role === 'ADMIN';
   const [objects, setObjects] = useState<Object[]>([]);
   const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
@@ -80,6 +84,7 @@ export default function Objects() {
       }
     } catch (error) {
       console.error('Error loading image:', error);
+      showError('Не удалось загрузить изображение');
     }
   };
 
@@ -98,6 +103,7 @@ export default function Objects() {
       }
     } catch (error) {
       console.error('Error loading objects:', error);
+      showError('Не удалось загрузить объекты');
     }
   };
 
@@ -173,10 +179,12 @@ export default function Objects() {
       }
     } catch (error) {
       console.error('Error saving object:', error);
+      showError('Не удалось сохранить объект');
     }
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
+    if (!isAdmin) return;
     setEditingStatusId(id);
     setEditingStatusValue(newStatus);
   };
@@ -206,6 +214,7 @@ export default function Objects() {
         }
       } catch (error) {
         console.error('Error updating status:', error);
+        showError('Не удалось обновить статус');
       }
     } else {
       setEditingStatusId(null);
@@ -227,6 +236,7 @@ export default function Objects() {
       }
     } catch (error) {
       console.error('Error deleting object:', error);
+      showError('Не удалось удалить объект');
     }
   };
 
@@ -243,6 +253,10 @@ export default function Objects() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingObject(null);
+  };
+
+  const handleCardClick = (id: string) => {
+    navigate(`/main/objects/${id}`);
   };
 
   return (
@@ -262,7 +276,8 @@ export default function Objects() {
         {objects.map((obj) => (
           <div 
             key={obj.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
+            className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ${!editMode ? 'cursor-pointer' : ''}`}
+            onClick={() => !editMode && handleCardClick(obj.id)}
           >
             <div className="grid grid-cols-3 gap-6 p-6">
               <div className="col-span-1">
@@ -288,7 +303,7 @@ export default function Objects() {
                   
                   <div className="mb-6">
                     <span className="text-gray-600 text-lg">Текущее состояние:</span>
-                    {editMode ? (
+                    {editMode && isAdmin ? (
                       <div className="flex flex-col gap-2 mt-2">
                         <textarea 
                           value={editingStatusId === obj.id ? editingStatusValue : obj.status}
@@ -344,13 +359,19 @@ export default function Objects() {
                 {editMode && isAdmin && (
                   <div className="flex gap-3">
                     <button 
-                      onClick={() => handleEditObject(obj)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditObject(obj);
+                      }}
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded text-lg transition-colors"
                     >
                       Редактировать
                     </button>
                     <button 
-                      onClick={() => handleDelete(obj.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(obj.id);
+                      }}
                       className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded text-lg transition-colors"
                     >
                       Удалить

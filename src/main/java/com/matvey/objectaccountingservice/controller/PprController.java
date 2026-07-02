@@ -123,7 +123,7 @@ public class PprController {
             Ppr updatedPpr = pprService.update(id, ppr);
             return ResponseEntity.ok(pprMapper.toResponseDto(updatedPpr));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось загрузить файл: " + e.getMessage(), e);
         }
     }
 
@@ -141,7 +141,7 @@ public class PprController {
             Ppr updatedPpr = pprService.update(id, ppr);
             return ResponseEntity.ok(pprMapper.toResponseDto(updatedPpr));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to replace file: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось заменить файл: " + e.getMessage(), e);
         }
     }
 
@@ -161,7 +161,7 @@ public class PprController {
                     .headers(headers)
                     .body(fileData);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download file: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось скачать файл: " + e.getMessage(), e);
         }
     }
 }

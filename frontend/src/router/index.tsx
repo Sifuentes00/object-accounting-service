@@ -4,6 +4,7 @@ import Layout from '@/components/Layout';
 import Objects from '@/pages/Objects';
 import Customers from '@/pages/Customers';
 import Employees from '@/pages/Employees';
+import ObjectDetail from '@/pages/ObjectDetail';
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: 'employees',
         element: <Employees />,
+      },
+      {
+        path: 'objects/:id',
+        element: <ObjectDetail />,
       },
     ],
   },

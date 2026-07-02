@@ -50,6 +50,9 @@ public class ObjectController {
                     .orElseThrow(() -> new RuntimeException("Employee not found"));
             object.setResponsibleEmployee(employee);
         }
+        if (object.getStatus() == null) {
+            object.setStatus("");
+        }
         Object savedObject = objectRepository.save(object);
         return new ResponseEntity<>(objectMapper.toResponseDto(savedObject), HttpStatus.CREATED);
     }
@@ -105,7 +108,9 @@ public class ObjectController {
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
         
         existingObject.setName(dto.getName());
-        existingObject.setStatus(dto.getStatus());
+        if (dto.getStatus() != null) {
+            existingObject.setStatus(dto.getStatus());
+        }
         existingObject.setAddress(dto.getAddress());
         existingObject.setWorkType(dto.getWorkType());
         existingObject.setCustomer(customer);
@@ -148,7 +153,7 @@ public class ObjectController {
             Object updatedObject = objectRepository.save(object);
             return ResponseEntity.ok(objectMapper.toResponseDto(updatedObject));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload image: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось загрузить изображение: " + e.getMessage(), e);
         }
     }
 
@@ -166,7 +171,7 @@ public class ObjectController {
             Object updatedObject = objectService.update(id, object);
             return ResponseEntity.ok(objectMapper.toResponseDto(updatedObject));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to replace image: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось заменить изображение: " + e.getMessage(), e);
         }
     }
 
@@ -187,7 +192,7 @@ public class ObjectController {
                     .headers(headers)
                     .body(imageData);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download image: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось скачать изображение: " + e.getMessage(), e);
         }
     }
 }

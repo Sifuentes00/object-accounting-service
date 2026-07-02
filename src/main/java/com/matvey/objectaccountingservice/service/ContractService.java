@@ -34,7 +34,7 @@ public class ContractService {
                 .orElseThrow(() -> new ResourceNotFoundException("Object", contract.getObject().getId()));
 
         if (object.getContract() != null) {
-            throw new BusinessLogicException("Object already has a contract");
+            throw new BusinessLogicException("У объекта уже есть договор");
         }
 
         contract.setObject(object);
@@ -62,7 +62,7 @@ public class ContractService {
     public Contract getByNumber(String number) {
         log.info("Getting contract by number: {}", number);
         return contractRepository.findByNumber(number)
-                .orElseThrow(() -> new ResourceNotFoundException("Contract not found with number: " + number));
+                .orElseThrow(() -> new ResourceNotFoundException("Договор не найден с номером: " + number));
     }
 
     @Transactional
@@ -80,7 +80,7 @@ public class ContractService {
                 .orElseThrow(() -> new ResourceNotFoundException("Object", contract.getObject().getId()));
 
         if (!existingContract.getObject().getId().equals(object.getId()) && object.getContract() != null) {
-            throw new BusinessLogicException("Object already has a contract");
+            throw new BusinessLogicException("У объекта уже есть договор");
         }
 
         String oldFileName = existingContract.getFileUniqueName();

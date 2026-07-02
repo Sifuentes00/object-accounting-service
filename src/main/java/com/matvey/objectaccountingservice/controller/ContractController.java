@@ -36,7 +36,7 @@ public class ContractController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ContractResponseDto> create(@Valid @RequestBody ContractRequestDto dto) {
         if (dto.getEndDate().isBefore(dto.getConclusionDate())) {
-            throw new InvalidDateException("End date cannot be before conclusion date");
+            throw new InvalidDateException("Дата окончания не может быть раньше даты заключения");
         }
         Object object = objectRepository.findById(dto.getObjectId())
                 .orElseThrow(() -> new RuntimeException("Object not found"));
@@ -82,7 +82,7 @@ public class ContractController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ContractResponseDto> update(@PathVariable Long id, @Valid @RequestBody ContractRequestDto dto) {
         if (dto.getEndDate().isBefore(dto.getConclusionDate())) {
-            throw new InvalidDateException("End date cannot be before conclusion date");
+            throw new InvalidDateException("Дата окончания не может быть раньше даты заключения");
         }
         Object object = objectRepository.findById(dto.getObjectId())
                 .orElseThrow(() -> new RuntimeException("Object not found"));
@@ -109,7 +109,7 @@ public class ContractController {
             Contract updatedContract = contractService.update(id, contract);
             return ResponseEntity.ok(contractMapper.toResponseDto(updatedContract));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось загрузить файл: " + e.getMessage(), e);
         }
     }
 
@@ -127,7 +127,7 @@ public class ContractController {
             Contract updatedContract = contractService.update(id, contract);
             return ResponseEntity.ok(contractMapper.toResponseDto(updatedContract));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to replace file: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось заменить файл: " + e.getMessage(), e);
         }
     }
 
@@ -147,7 +147,7 @@ public class ContractController {
                     .headers(headers)
                     .body(fileData);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download file: " + e.getMessage(), e);
+            throw new RuntimeException("Не удалось скачать файл: " + e.getMessage(), e);
         }
     }
 }

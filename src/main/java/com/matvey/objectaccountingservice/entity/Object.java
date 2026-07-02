@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.PrePersist;
+
 @Entity
 @Table(name = "object", uniqueConstraints = @UniqueConstraint(columnNames = "responsible_employee_id"))
 @Data
@@ -69,4 +71,11 @@ public class Object {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    @PrePersist
+    protected void onCreate() {
+        if (status == null) {
+            status = "";
+        }
+    }
 }

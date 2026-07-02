@@ -73,14 +73,14 @@ public class AuthService {
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         if (response.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Failed to get admin token");
+            throw new RuntimeException("Не удалось получить токен администратора");
         }
 
         try {
             JsonNode root = objectMapper.readTree(response.getBody());
             return root.get("access_token").asText();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse admin token response", e);
+            throw new RuntimeException("Не удалось разобрать ответ с токеном администратора", e);
         }
     }
 
@@ -111,7 +111,7 @@ public class AuthService {
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         if (response.getStatusCode() != HttpStatus.CREATED && response.getStatusCode() != HttpStatus.CONFLICT) {
-            throw new RuntimeException("Failed to create role: " + response.getBody());
+            throw new RuntimeException("Не удалось создать роль: " + response.getBody());
         }
     }
 
@@ -125,14 +125,14 @@ public class AuthService {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
         if (response.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Failed to get role: " + response.getBody());
+            throw new RuntimeException("Не удалось получить роль: " + response.getBody());
         }
 
         try {
             JsonNode root = objectMapper.readTree(response.getBody());
             return root.get("id").asText();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse role response", e);
+            throw new RuntimeException("Не удалось разобрать ответ с ролью", e);
         }
     }
 
@@ -152,7 +152,7 @@ public class AuthService {
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         if (response.getStatusCode() != HttpStatus.NO_CONTENT && response.getStatusCode() != HttpStatus.CREATED) {
-            throw new RuntimeException("Failed to assign role to user: " + response.getBody());
+            throw new RuntimeException("Не удалось назначить роль пользователю: " + response.getBody());
         }
     }
 
@@ -176,7 +176,7 @@ public class AuthService {
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         if (response.getStatusCode() != HttpStatus.CREATED) {
-            throw new RuntimeException("Failed to create user in Keycloak: " + response.getBody());
+            throw new RuntimeException("Не удалось создать пользователя в Keycloak: " + response.getBody());
         }
 
         String location = response.getHeaders().getLocation().toString();
@@ -208,7 +208,7 @@ public class AuthService {
         System.out.println("Response body: " + response.getBody());
 
         if (response.getStatusCode() != HttpStatus.NO_CONTENT && response.getStatusCode() != HttpStatus.CREATED) {
-            throw new RuntimeException("Failed to assign role to user: " + response.getBody());
+            throw new RuntimeException("Не удалось назначить роль пользователю: " + response.getBody());
         }
     }
 
@@ -276,14 +276,14 @@ public class AuthService {
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         if (response.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Failed to login user: " + response.getBody());
+            throw new RuntimeException("Не удалось войти пользователю: " + response.getBody());
         }
 
         try {
             JsonNode root = objectMapper.readTree(response.getBody());
             return root.get("access_token").asText();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse login response", e);
+            throw new RuntimeException("Не удалось разобрать ответ входа", e);
         }
     }
 }

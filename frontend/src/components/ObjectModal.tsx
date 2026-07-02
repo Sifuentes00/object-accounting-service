@@ -26,7 +26,6 @@ interface Employee {
 export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectModalProps) {
   const [formData, setFormData] = useState({
     name: '',
-    status: '',
     address: '',
     workType: '',
     customerId: '',
@@ -48,7 +47,6 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
       if (object) {
         setFormData({
           name: object.name || '',
-          status: object.status || '',
           address: object.address || '',
           workType: object.workType || '',
           customerId: object.customer?.id?.toString() || '',
@@ -67,7 +65,6 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
       } else {
         setFormData({
           name: '',
-          status: '',
           address: '',
           workType: '',
           customerId: '',
@@ -227,30 +224,6 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Статус</label>
-                <textarea
-                  value={formData.status}
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    const lines = value.split('\n');
-                    const processedLines = lines.map(line => {
-                      if (line.length > 50) {
-                        let result = '';
-                        for (let i = 0; i < line.length; i += 50) {
-                          result += line.slice(i, i + 50) + '\n';
-                        }
-                        return result.trim();
-                      }
-                      return line;
-                    });
-                    setFormData({ ...formData, status: processedLines.join('\n') });
-                  }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 resize-y"
-                  rows={3}
                 />
               </div>
 

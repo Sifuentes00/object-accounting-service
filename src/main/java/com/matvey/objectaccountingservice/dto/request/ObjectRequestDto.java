@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ObjectRequestDto {
 
-    @NotBlank(message = "Status is required")
     private String status;
 
     @NotBlank(message = "Name is required")

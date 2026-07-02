@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import EmployeeModal from '@/components/EmployeeModal';
+import { useError } from '@/context/ErrorContext';
 
 interface Employee {
   id: number;
@@ -11,6 +12,7 @@ interface Employee {
 }
 
 export default function Employees() {
+  const { showError } = useError();
   const [employeeType, setEmployeeType] = useState<'company' | 'customers'>('company');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [companyEmployees, setCompanyEmployees] = useState<Employee[]>([]);
@@ -68,9 +70,17 @@ export default function Employees() {
       });
       if (response.ok) {
         loadEmployees();
+      } else {
+        const errorData = await response.json().catch(() => null);
+        if (errorData && errorData.message) {
+          showError(errorData.message);
+        } else {
+          showError('Не удалось удалить сотрудника. Возможно, у него есть связанные ППР.');
+        }
       }
     } catch (error) {
       console.error('Error deleting employee:', error);
+      showError('Ошибка при удалении сотрудника');
     }
   };
 

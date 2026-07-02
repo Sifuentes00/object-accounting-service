@@ -20,6 +20,8 @@ public class PprResponseDto {
     private String fileUniqueName;
     private Long objectId;
     private Long employeeId;
+    private String employeeFullName;
+    private String employeePosition;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long version;

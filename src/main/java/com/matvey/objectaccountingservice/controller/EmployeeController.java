@@ -32,7 +32,7 @@ public class EmployeeController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
         if (!PHONE_PATTERN.matcher(dto.getPhoneNumber()).matches()) {
-            throw new InvalidPhoneNumberException("Phone number must be 10-15 digits, optionally starting with +");
+            throw new InvalidPhoneNumberException("Номер телефона должен содержать 10-15 цифр, опционально начиная с +");
         }
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
@@ -71,7 +71,7 @@ public class EmployeeController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmployeeResponseDto> update(@PathVariable Long id, @Valid @RequestBody EmployeeRequestDto dto) {
         if (!PHONE_PATTERN.matcher(dto.getPhoneNumber()).matches()) {
-            throw new InvalidPhoneNumberException("Phone number must be 10-15 digits, optionally starting with +");
+            throw new InvalidPhoneNumberException("Номер телефона должен содержать 10-15 цифр, опционально начиная с +");
         }
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));

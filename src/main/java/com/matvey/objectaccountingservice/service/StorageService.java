@@ -83,25 +83,25 @@ public class StorageService {
 
     private void validatePdfFile(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be empty");
+            throw new IllegalArgumentException("Файл не может быть пустым");
         }
         if (!PDF_CONTENT_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("Only PDF files are allowed");
+            throw new IllegalArgumentException("Разрешены только PDF файлы");
         }
         if (file.getSize() > maxPdfSize) {
-            throw new IllegalArgumentException("File size exceeds maximum limit of " + (maxPdfSize / 1024 / 1024) + "MB");
+            throw new IllegalArgumentException("Размер файла превышает максимальный лимит " + (maxPdfSize / 1024 / 1024) + "МБ");
         }
     }
 
     private void validateImageFile(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be empty");
+            throw new IllegalArgumentException("Файл не может быть пустым");
         }
         if (!IMAGE_CONTENT_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("Only JPG and PNG files are allowed");
+            throw new IllegalArgumentException("Разрешены только JPG и PNG файлы");
         }
         if (file.getSize() > maxImageSize) {
-            throw new IllegalArgumentException("File size exceeds maximum limit of " + (maxImageSize / 1024 / 1024) + "MB");
+            throw new IllegalArgumentException("Размер файла превышает максимальный лимит " + (maxImageSize / 1024 / 1024) + "МБ");
         }
     }
 

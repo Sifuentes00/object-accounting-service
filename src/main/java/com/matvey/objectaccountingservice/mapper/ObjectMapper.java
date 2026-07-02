@@ -10,6 +10,7 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface ObjectMapper {
 
+    @Mapping(target = "status", defaultValue = "")
     Object toEntity(ObjectRequestDto dto);
 
     @Mapping(source = "customer", target = "customer")
