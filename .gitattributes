@@ -1,7 +1,7 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
-scripts/* linguist-vendored
-scripts/* linguist-detectable=false
+scripts/** linguist-vendored
+scripts/** linguist-detectable=false
 
 *.sh linguist-detectable=false
 *.sh linguist-vendored
