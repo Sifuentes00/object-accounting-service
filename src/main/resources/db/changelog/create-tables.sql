@@ -21,7 +21,7 @@ CREATE TABLE employee (
 
 CREATE TABLE object (
     id BIGSERIAL PRIMARY KEY,
-    status VARCHAR(50) NOT NULL,
+    status TEXT NOT NULL,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(500) NOT NULL,
     work_type VARCHAR(50) NOT NULL,
@@ -73,3 +73,6 @@ CREATE INDEX idx_contract_object_id ON contract(object_id);
 CREATE INDEX idx_employee_customer_id ON employee(customer_id);
 CREATE INDEX idx_ppr_object_id ON ppr(object_id);
 CREATE INDEX idx_ppr_employee_id ON ppr(employee_id);
+
+INSERT INTO customer (name, legal_address, created_at, updated_at, version)
+VALUES ('ЗАО "БЕЛСПЕЦЭНЕРГО"', 'г.Минск, ул.Фабричная, д.6', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);

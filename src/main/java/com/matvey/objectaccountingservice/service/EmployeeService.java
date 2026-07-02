@@ -32,7 +32,7 @@ public class EmployeeService {
                 .anyMatch(e -> e.getPhoneNumber().equals(employee.getPhoneNumber()));
 
         if (phoneExists) {
-            throw new BusinessLogicException("Employee with phone number " + employee.getPhoneNumber() + " already exists for this customer");
+            throw new BusinessLogicException("Сотрудник с номером телефона " + employee.getPhoneNumber() + " уже существует для этого заказчика");
         }
 
         employee.setCustomer(customer);
@@ -74,7 +74,7 @@ public class EmployeeService {
                     .anyMatch(e -> e.getPhoneNumber().equals(employee.getPhoneNumber()));
 
             if (phoneExists) {
-                throw new BusinessLogicException("Employee with phone number " + employee.getPhoneNumber() + " already exists for this customer");
+                throw new BusinessLogicException("Сотрудник с номером телефона " + employee.getPhoneNumber() + " уже существует для этого заказчика");
             }
         }
 
@@ -94,7 +94,7 @@ public class EmployeeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", id));
 
         if (!employee.getPprs().isEmpty()) {
-            throw new BusinessLogicException("Cannot delete employee with existing PPRs");
+            throw new BusinessLogicException("Нельзя удалить сотрудника с существующими ППР");
         }
 
         employeeRepository.delete(employee);

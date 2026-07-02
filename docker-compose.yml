@@ -25,8 +25,7 @@ services:
       - KC_DB_URL=jdbc:postgresql://keycloak-db:5432/${KEYCLOAK_DB_NAME}
       - KC_DB_USERNAME=${KEYCLOAK_DB_USER}
       - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
-      - KC_HOSTNAME=keycloak
-      - KC_HOSTNAME_PORT=8091
+      - KC_HOSTNAME_URL=http://localhost:8091
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HTTP_ENABLED=true
@@ -56,8 +55,8 @@ services:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     ports:
-      - "${MINIO_PORT}"
-      - "${MINIO_CONSOLE_PORT}"
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -75,9 +74,15 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: object-accounting
+      KEYCLOAK_CLIENT_ID: object-accounting-app
+      KEYCLOAK_CLIENT_SECRET: object-accounting-secret
+      MINIO_URL: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     depends_on:
       - postgres
       - keycloak
+      - minio
     restart: unless-stopped
 
 volumes:

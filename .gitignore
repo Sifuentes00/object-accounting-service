@@ -19,6 +19,7 @@ target/
 *.iml
 *.ipr
 .env
+/frontend/.env.frontend
 
 ### NetBeans ###
 /nbproject/private/

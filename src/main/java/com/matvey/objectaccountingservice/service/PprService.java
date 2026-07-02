@@ -66,7 +66,7 @@ public class PprService {
     public Ppr getByNumber(String number) {
         log.info("Getting ppr by number: {}", number);
         return pprRepository.findByNumber(number)
-                .orElseThrow(() -> new ResourceNotFoundException("Ppr not found with number: " + number));
+                .orElseThrow(() -> new ResourceNotFoundException("ППР не найден с номером: " + number));
     }
 
     public List<Ppr> getByArchiveNumber(String archiveNumber) {

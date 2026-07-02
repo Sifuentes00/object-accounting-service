@@ -65,11 +65,11 @@ public class CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", id));
 
         if (!customer.getObjects().isEmpty()) {
-            throw new BusinessLogicException("Cannot delete customer with existing objects");
+            throw new BusinessLogicException("Нельзя удалить заказчика с существующими объектами");
         }
 
         if (!customer.getEmployees().isEmpty()) {
-            throw new BusinessLogicException("Cannot delete customer with existing employees");
+            throw new BusinessLogicException("Нельзя удалить заказчика с существующими сотрудниками");
         }
 
         customerRepository.delete(customer);

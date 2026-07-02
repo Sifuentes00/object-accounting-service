@@ -48,7 +48,7 @@ public class Customer {
     @Builder.Default
     private List<Object> objects = new ArrayList<>();
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<Employee> employees = new ArrayList<>();
 }

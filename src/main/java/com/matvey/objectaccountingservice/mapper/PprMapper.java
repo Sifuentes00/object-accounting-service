@@ -4,6 +4,7 @@ import com.matvey.objectaccountingservice.dto.request.PprRequestDto;
 import com.matvey.objectaccountingservice.dto.response.PprResponseDto;
 import com.matvey.objectaccountingservice.entity.Ppr;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
@@ -11,6 +12,8 @@ public interface PprMapper {
 
     Ppr toEntity(PprRequestDto dto);
 
+    @Mapping(source = "employee.fullName", target = "employeeFullName")
+    @Mapping(source = "employee.position", target = "employeePosition")
     PprResponseDto toResponseDto(Ppr entity);
 
     void updateEntityFromDto(PprRequestDto dto, @MappingTarget Ppr entity);
