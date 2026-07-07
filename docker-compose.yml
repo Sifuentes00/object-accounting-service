@@ -25,7 +25,7 @@ services:
       - KC_DB_URL=jdbc:postgresql://keycloak-db:5432/${KEYCLOAK_DB_NAME}
       - KC_DB_USERNAME=${KEYCLOAK_DB_USER}
       - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
-      - KC_HOSTNAME_URL=http://localhost:8091
+      - KC_HOSTNAME_URL=http://localhost:8080
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HTTP_ENABLED=true
@@ -73,6 +73,7 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_ISSUER_URI: http://localhost:8080
       KEYCLOAK_REALM: object-accounting
       KEYCLOAK_CLIENT_ID: object-accounting-app
       KEYCLOAK_CLIENT_SECRET: object-accounting-secret
@@ -83,6 +84,17 @@ services:
       - postgres
       - keycloak
       - minio
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: object-accounting-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - app
     restart: unless-stopped
 
 volumes:

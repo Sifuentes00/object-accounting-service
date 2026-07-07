@@ -49,7 +49,7 @@ export default function EmployeeModal({ isOpen, onClose, onSave, employee, isCom
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8090/api/v1/customers', {
+      const response = await fetch('/api/v1/customers', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -134,7 +134,7 @@ export default function EmployeeModal({ isOpen, onClose, onSave, employee, isCom
                   required
                 >
                   <option value="">Выберите предприятие</option>
-                  {customers.filter(c => c.name !== 'ЗАО "БЕЛСПЕЦЭНЕРГО"').map((customer) => (
+                  {customers.filter(c => !c.name.includes('БЕЛСПЕЦЭНЕРГО')).map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.name}
                     </option>

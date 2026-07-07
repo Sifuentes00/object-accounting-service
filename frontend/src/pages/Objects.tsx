@@ -72,7 +72,7 @@ export default function Objects() {
   const loadImage = async (objectId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/objects/${objectId}/image`, {
+      const response = await fetch(`/api/v1/objects/${objectId}/image`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -91,7 +91,7 @@ export default function Objects() {
   const loadObjects = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8090/api/v1/objects', {
+      const response = await fetch('/api/v1/objects', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -112,7 +112,7 @@ export default function Objects() {
       const token = localStorage.getItem('token');
       const payload = {
         name: data.name,
-        status: data.status,
+        status: editingObject?.status || 'IN_PROGRESS',
         address: data.address,
         workType: data.workType,
         customerId: data.customerId ? parseInt(data.customerId) : null,
@@ -123,7 +123,7 @@ export default function Objects() {
       let objectId;
 
       if (editingObject) {
-        response = await fetch(`http://localhost:8090/api/v1/objects/${editingObject.id}`, {
+        response = await fetch(`/api/v1/objects/${editingObject.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -133,7 +133,7 @@ export default function Objects() {
         });
         objectId = editingObject.id;
       } else {
-        response = await fetch('http://localhost:8090/api/v1/objects', {
+        response = await fetch('/api/v1/objects', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -152,8 +152,7 @@ export default function Objects() {
           const formData = new FormData();
           formData.append('file', data.image);
           
-          console.log('Uploading image for object:', objectId, 'file:', data.image.name);
-          const imageResponse = await fetch(`http://localhost:8090/api/v1/objects/${objectId}/image`, {
+          const imageResponse = await fetch(`/api/v1/objects/${objectId}/image`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -161,18 +160,13 @@ export default function Objects() {
             body: formData,
           });
           
-          console.log('Image upload response status:', imageResponse.status);
           if (!imageResponse.ok) {
-            const errorText = await imageResponse.text();
-            console.error('Failed to upload image:', imageResponse.statusText, errorText);
-          } else {
-            console.log('Image uploaded successfully');
+            console.error('Failed to upload image');
           }
         }
         
         await loadObjects();
         setIsModalOpen(false);
-        window.location.reload();
       } else {
         const errorText = await response.text();
         console.error('Failed to save object:', response.statusText, errorText);
@@ -194,7 +188,7 @@ export default function Objects() {
       try {
         const token = localStorage.getItem('token');
         console.log('Saving status for object:', editingStatusId, 'new value:', editingStatusValue);
-        const response = await fetch(`http://localhost:8090/api/v1/objects/${editingStatusId}/status`, {
+        const response = await fetch(`/api/v1/objects/${editingStatusId}/status`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -225,7 +219,7 @@ export default function Objects() {
   const handleDelete = async (id: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/objects/${id}`, {
+      const response = await fetch(`/api/v1/objects/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -276,8 +270,8 @@ export default function Objects() {
         {objects.map((obj) => (
           <div 
             key={obj.id}
-            className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ${!editMode ? 'cursor-pointer' : ''}`}
-            onClick={() => !editMode && handleCardClick(obj.id)}
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+            onClick={() => handleCardClick(obj.id)}
           >
             <div className="grid grid-cols-3 gap-6 p-6">
               <div className="col-span-1">
@@ -310,12 +304,16 @@ export default function Objects() {
                           onChange={(e) => {
                             handleStatusChange(obj.id, e.target.value);
                           }}
+                          onClick={(e) => e.stopPropagation()}
                           className="border border-gray-300 rounded px-4 py-3 w-full text-lg resize-y min-h-[60px]"
                           rows={2}
                         />
                         {editingStatusId === obj.id && (
                           <button 
-                            onClick={handleApplyStatus}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApplyStatus();
+                            }}
                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded text-lg w-fit"
                           >
                             Применить

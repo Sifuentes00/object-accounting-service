@@ -26,7 +26,7 @@ export default function Employees() {
   const loadEmployees = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8090/api/v1/employees', {
+      const response = await fetch('/api/v1/employees', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -62,7 +62,7 @@ export default function Employees() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/employees/${id}`, {
+      const response = await fetch(`/api/v1/employees/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -88,8 +88,8 @@ export default function Employees() {
     try {
       const token = localStorage.getItem('token');
       const url = editingEmployee 
-        ? `http://localhost:8090/api/v1/employees/${editingEmployee.id}`
-        : 'http://localhost:8090/api/v1/employees';
+        ? `/api/v1/employees/${editingEmployee.id}`
+        : '/api/v1/employees';
       const method = editingEmployee ? 'PUT' : 'POST';
       
       const response = await fetch(url, {

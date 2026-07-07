@@ -68,6 +68,7 @@ public class Object {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;

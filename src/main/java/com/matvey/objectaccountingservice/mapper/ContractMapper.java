@@ -11,6 +11,7 @@ public interface ContractMapper {
 
     Contract toEntity(ContractRequestDto dto);
 
+
     ContractResponseDto toResponseDto(Contract entity);
 
     void updateEntityFromDto(ContractRequestDto dto, @MappingTarget Contract entity);

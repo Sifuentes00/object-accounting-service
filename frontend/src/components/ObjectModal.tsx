@@ -81,7 +81,7 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
   const loadCurrentImage = async (objectId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/objects/${objectId}/image`, {
+      const response = await fetch(`/api/v1/objects/${objectId}/image`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -125,7 +125,7 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
       const token = localStorage.getItem('token');
       console.log('Loading customers with token:', token ? `exists (${token.substring(0, 20)}...)` : 'missing');
       console.log('Full token from localStorage:', token);
-      const response = await fetch('http://localhost:8090/api/v1/customers', {
+      const response = await fetch('/api/v1/customers', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -154,7 +154,7 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
     try {
       console.log('Loading employees for customer:', customerId);
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/employees/customer/${customerId}`, {
+      const response = await fetch(`/api/v1/employees/customer/${customerId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -260,7 +260,7 @@ export default function ObjectModal({ isOpen, onClose, onSave, object }: ObjectM
                   disabled={loadingCustomers}
                 >
                   <option value="">Выберите заказчика</option>
-                  {customers.filter(c => c.name !== 'ЗАО "БЕЛСПЕЦЭНЕРГО"').map((customer) => (
+                  {customers.filter(c => !c.name.includes('БЕЛСПЕЦЭНЕРГО')).map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.name}
                     </option>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useEditMode } from '../context/EditModeContext';
+import { useAuth } from '../context/AuthContext';
 import ContractModal from '../components/ContractModal';
 import PprModal from '../components/PprModal';
 import ObjectModal from '../components/ObjectModal';
@@ -66,6 +67,8 @@ const formatDate = (dateString: string) => {
 export default function ObjectDetail() {
   const { id } = useParams<{ id: string }>();
   const { editMode } = useEditMode();
+  const { role } = useAuth();
+  const isAdmin = role === 'ADMIN';
   const [object, setObject] = useState<Object | null>(null);
   const [editingStatusValue, setEditingStatusValue] = useState<string>('');
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -104,7 +107,7 @@ export default function ObjectDetail() {
   const loadObject = async (objectId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/objects/${objectId}`, {
+      const response = await fetch(`/api/v1/objects/${objectId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -126,7 +129,7 @@ export default function ObjectDetail() {
   const loadImage = async (objectId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/objects/${objectId}/image`, {
+      const response = await fetch(`/api/v1/objects/${objectId}/image`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -144,7 +147,7 @@ export default function ObjectDetail() {
   const loadContracts = async (objectId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/contracts/object/${objectId}`, {
+      const response = await fetch(`/api/v1/contracts/object/${objectId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -161,7 +164,7 @@ export default function ObjectDetail() {
   const loadPprs = async (objectId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/pprs/object/${objectId}`, {
+      const response = await fetch(`/api/v1/pprs/object/${objectId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -178,7 +181,7 @@ export default function ObjectDetail() {
   const loadEmployees = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8090/api/v1/employees', {
+      const response = await fetch('/api/v1/employees', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -199,7 +202,7 @@ export default function ObjectDetail() {
       } else {
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:8090/api/v1/contracts/${contractId}/file`, {
+          const response = await fetch(`/api/v1/contracts/${contractId}/file`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -219,7 +222,7 @@ export default function ObjectDetail() {
       } else {
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:8090/api/v1/pprs/${pprId}/file`, {
+          const response = await fetch(`/api/v1/pprs/${pprId}/file`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -242,9 +245,9 @@ export default function ObjectDetail() {
       let url: string;
 
       if (contractId !== undefined) {
-        url = `http://localhost:8090/api/v1/contracts/${contractId}/file`;
+        url = `/api/v1/contracts/${contractId}/file`;
       } else if (pprId !== undefined) {
-        url = `http://localhost:8090/api/v1/pprs/${pprId}/file`;
+        url = `/api/v1/pprs/${pprId}/file`;
       } else {
         return;
       }
@@ -279,7 +282,7 @@ export default function ObjectDetail() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8090/api/v1/objects/${id}/status`, {
+      const response = await fetch(`/api/v1/objects/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -289,7 +292,7 @@ export default function ObjectDetail() {
       });
       
       if (response.ok) {
-        window.location.reload();
+        await loadObject(id!);
       }
     } catch (error) {
       console.error('Error saving status:', error);
@@ -299,30 +302,41 @@ export default function ObjectDetail() {
   const handleSaveObject = async (data: any) => {
     try {
       const token = localStorage.getItem('token');
-      const formData = new FormData();
-      
-      formData.append('name', data.name);
-      formData.append('address', data.address);
-      formData.append('workType', data.workType);
-      if (data.customerId) {
-        formData.append('customerId', data.customerId);
-      }
-      if (data.responsibleEmployeeId) {
-        formData.append('responsibleEmployeeId', data.responsibleEmployeeId);
-      }
-      if (data.image) {
-        formData.append('file', data.image);
-      }
+      const payload = {
+        name: data.name,
+        address: data.address,
+        workType: data.workType,
+        customerId: data.customerId ? parseInt(data.customerId) : null,
+        responsibleEmployeeId: data.responsibleEmployeeId ? parseInt(data.responsibleEmployeeId) : null,
+      };
 
-      const response = await fetch(`http://localhost:8090/api/v1/objects/${id}`, {
+      const response = await fetch(`/api/v1/objects/${id}`, {
         method: 'PUT',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: formData,
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
+        if (data.image) {
+          const formData = new FormData();
+          formData.append('file', data.image);
+          
+          const imageResponse = await fetch(`/api/v1/objects/${id}/image`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+          });
+          
+          if (!imageResponse.ok) {
+            console.error('Failed to upload image');
+          }
+        }
+        
         await loadObject(id!);
         setIsObjectModalOpen(false);
       }
@@ -348,7 +362,7 @@ export default function ObjectDetail() {
       let contractId;
       
       if (editingContract) {
-        response = await fetch(`http://localhost:8090/api/v1/contracts/${editingContract.id}`, {
+        response = await fetch(`/api/v1/contracts/${editingContract.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -358,7 +372,7 @@ export default function ObjectDetail() {
         });
         contractId = editingContract.id;
       } else {
-        response = await fetch(`http://localhost:8090/api/v1/contracts`, {
+        response = await fetch(`/api/v1/contracts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -376,7 +390,7 @@ export default function ObjectDetail() {
         const formData = new FormData();
         formData.append('file', file);
         
-        const fileResponse = await fetch(`http://localhost:8090/api/v1/contracts/${contractId}/file`, {
+        const fileResponse = await fetch(`/api/v1/contracts/${contractId}/file`, {
           method: editingContract ? 'PUT' : 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -385,10 +399,10 @@ export default function ObjectDetail() {
         });
         
         if (fileResponse.ok) {
-          window.location.reload();
+          await loadContracts(id!);
         }
       } else if (response.ok) {
-        window.location.reload();
+        await loadContracts(id!);
       }
     } catch (error) {
       console.error('Error saving contract:', error);
@@ -401,7 +415,7 @@ export default function ObjectDetail() {
       onConfirm: async () => {
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:8090/api/v1/contracts/${contractId}`, {
+          const response = await fetch(`/api/v1/contracts/${contractId}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -437,7 +451,7 @@ export default function ObjectDetail() {
       let pprId;
 
       if (editingPpr) {
-        response = await fetch(`http://localhost:8090/api/v1/pprs/${editingPpr.id}`, {
+        response = await fetch(`/api/v1/pprs/${editingPpr.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -447,7 +461,7 @@ export default function ObjectDetail() {
         });
         pprId = editingPpr.id;
       } else {
-        response = await fetch(`http://localhost:8090/api/v1/pprs`, {
+        response = await fetch(`/api/v1/pprs`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -465,7 +479,7 @@ export default function ObjectDetail() {
         const formData = new FormData();
         formData.append('file', file);
         
-        const fileResponse = await fetch(`http://localhost:8090/api/v1/pprs/${pprId}/file`, {
+        const fileResponse = await fetch(`/api/v1/pprs/${pprId}/file`, {
           method: editingPpr ? 'PUT' : 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -474,10 +488,12 @@ export default function ObjectDetail() {
         });
         
         if (fileResponse.ok) {
-          window.location.reload();
+          await loadPprs(id!);
+          setIsPprModalOpen(false);
         }
       } else if (response.ok) {
-        window.location.reload();
+        await loadPprs(id!);
+        setIsPprModalOpen(false);
       }
     } catch (error) {
       console.error('Error saving ppr:', error);
@@ -490,7 +506,7 @@ export default function ObjectDetail() {
       onConfirm: async () => {
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:8090/api/v1/pprs/${pprId}`, {
+          const response = await fetch(`/api/v1/pprs/${pprId}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -554,7 +570,7 @@ export default function ObjectDetail() {
                 </div>
                 <div className="flex items-start">
                   <span className="text-gray-600 font-medium w-40 shrink-0">Текущее состояние:</span>
-                  {editMode ? (
+                  {editMode && isAdmin ? (
                     <div className="flex-1">
                       <textarea
                         value={editingStatusValue}
@@ -613,7 +629,7 @@ export default function ObjectDetail() {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
           <div className="p-6 border-b flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">Договор</h2>
-            {editMode && contracts.length < 1 && (
+            {editMode && isAdmin && contracts.length < 1 && (
               <button
                 onClick={handleAddContract}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -648,7 +664,7 @@ export default function ObjectDetail() {
                         >
                           Скачать
                         </button>
-                      {editMode && (
+                      {editMode && isAdmin && (
                         <>
                           <button
                             onClick={(e) => {
@@ -700,7 +716,7 @@ export default function ObjectDetail() {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
           <div className="p-6 border-b flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">ППР</h2>
-            {editMode && (
+            {editMode && isAdmin && (
               <button
                 onClick={handleAddPpr}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -736,7 +752,7 @@ export default function ObjectDetail() {
                         >
                           Скачать
                         </button>
-                      {editMode && (
+                      {editMode && isAdmin && (
                         <>
                           <button
                             onClick={(e) => {
